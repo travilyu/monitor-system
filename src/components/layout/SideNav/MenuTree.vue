@@ -40,6 +40,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import type { MenuItem } from '@/config/menu'
+import { DEFAULT_OPEN_KEYS } from '@/config/menu'
 
 interface Props {
   menuItems: MenuItem[]
@@ -49,7 +50,7 @@ const props = defineProps<Props>()
 const router = useRouter()
 
 const selectedKeys = ref<string[]>([])
-const openKeys = ref<string[]>([])
+const openKeys = ref<string[]>(DEFAULT_OPEN_KEYS)
 
 const handleMenuClick = (item: MenuItem) => {
   if (item.path) {

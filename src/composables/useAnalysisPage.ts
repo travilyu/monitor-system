@@ -1,7 +1,7 @@
 import { ref, reactive, computed } from 'vue'
 import { message } from 'ant-design-vue'
-import { monitorApi } from '@/api/modules/monitor'
-import type { MonitorItem } from '@/types/monitor'
+import { api } from '@/api/modules/analysis'
+import type { AnalysisItem } from '@/types/analysis'
 
 // 表格列定义
 const columns = [
@@ -12,10 +12,20 @@ const columns = [
     searchable: true,
   },
   {
+    title: '描述',
+    dataIndex: 'description',
+    key: 'description',
+    searchable: true,
+  },
+  {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    searchable: true,
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createTime',
+    key: 'createTime',
   },
   {
     title: '操作',
@@ -25,27 +35,26 @@ const columns = [
   },
 ] as const
 
-// 从列定义中获取可搜索字段
-const searchableFields = columns
-  .filter((col) => col.searchable)
-  .map((col) => col.dataIndex)
+// 表格操作定义
+const tableOperations = [
+  {
+    key: 'edit',
+    label: '编辑',
+    type: 'link',
+  },
+  {
+    key: 'delete',
+    label: '删除',
+    type: 'link',
+    danger: true,
+  },
+]
 
-// 默认搜索匹配函数
-const defaultSearchMatcher = (item: MonitorItem, keyword: string): boolean => {
-  if (!keyword) return true
-  const searchText = keyword.toLowerCase()
-
-  return searchableFields.some((field) => {
-    const value = item[field as keyof MonitorItem]
-    return value && String(value).toLowerCase().includes(searchText)
-  })
-}
-
-export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
+export function useAnalysisPage() {
   const formRef = ref()
   const state = reactive({
     loading: false,
-    rawTableData: [] as MonitorItem[],
+    rawTableData: [] as AnalysisItem[],
     pagination: {
       current: 1,
       pageSize: 10,
@@ -57,46 +66,24 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
     drawer: {
       visible: false,
       title: '',
-      initialValues: {} as Partial<MonitorItem>,
+      initialValues: {} as Partial<AnalysisItem>,
     },
   })
 
   // 计算过滤后的表格数据
   const tableData = computed(() => {
-    const filteredData = state.rawTableData.filter((item) =>
-      searchMatcher(item, state.search.keyword)
-    )
-
-    state.pagination.total = filteredData.length
     const start = (state.pagination.current - 1) * state.pagination.pageSize
     const end = start + state.pagination.pageSize
-    return filteredData.slice(start, end)
+    return state.rawTableData.slice(start, end)
   })
-
-  // 表格操作定义
-  const tableOperations = [
-    {
-      key: 'edit',
-      label: '编辑',
-      type: 'link',
-    },
-    {
-      key: 'delete',
-      label: '删除',
-      type: 'link',
-      danger: true,
-    },
-  ]
 
   // 加载表格数据
   const loadTableData = async () => {
     state.loading = true
     try {
-      const { items, total } = await monitorApi.getList({
-        page: 1,
-        pageSize: 1000, // 获取所有数据进行前端分页
-      })
-      state.rawTableData = items
+      const data = await api.getList()
+      state.rawTableData = data.items
+      state.pagination.total = data.total
     } catch (error) {
       message.error('加载数据失败')
     } finally {
@@ -111,20 +98,18 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   }
 
   // 处理表格操作
-  const handleTableOperation = async (key: string, record: MonitorItem) => {
+  const handleTableOperation = async (key: string, record: AnalysisItem) => {
     switch (key) {
       case 'edit':
-        state.drawer.title = '编辑监控项'
+        state.drawer.title = '编辑分析'
         state.drawer.initialValues = { ...record }
-        state.drawer.open = true
+        state.drawer.visible = true
         break
       case 'delete':
         try {
-          if (record.id) {
-            await monitorApi.delete(record.id)
-            message.success('删除成功')
-            loadTableData()
-          }
+          await lineApi.analysis.delete(record.id!)
+          message.success('删除成功')
+          loadTableData()
         } catch (error) {
           message.error('删除失败')
         }
@@ -136,9 +121,9 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   const handleToolbarAction = (action: string, ...args: any[]) => {
     switch (action) {
       case 'add':
-        state.drawer.title = '新增监控项'
+        state.drawer.title = '新增分析'
         state.drawer.initialValues = {}
-        state.drawer.open = true
+        state.drawer.visible = true
         break
       case 'refresh':
         state.search.keyword = ''
@@ -153,16 +138,16 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   }
 
   // 处理抽屉提交
-  const handleDrawerSubmit = async (values: MonitorItem) => {
+  const handleDrawerSubmit = async (values: AnalysisItem) => {
     try {
       if (values.id) {
-        await monitorApi.update(values.id, values)
+        await lineApi.analysis.update(values.id, values)
         message.success('更新成功')
       } else {
-        await monitorApi.create(values)
+        await lineApi.analysis.create(values)
         message.success('创建成功')
       }
-      state.drawer.open = false
+      state.drawer.visible = false
       loadTableData()
     } catch (error) {
       message.error('操作失败')
@@ -172,7 +157,7 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   return {
     formRef,
     state,
-    columns, // 导出列定义
+    columns,
     tableData,
     tableOperations,
     loadTableData,

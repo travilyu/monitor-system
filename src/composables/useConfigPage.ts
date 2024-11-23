@@ -1,20 +1,26 @@
 import { ref, reactive, computed } from 'vue'
 import { message } from 'ant-design-vue'
-import { monitorApi } from '@/api/modules/monitor'
-import type { MonitorItem } from '@/types/monitor'
+import { configApi } from '@/api/modules/config'
+import type { ConfigItem } from '@/types/config'
 
 // 表格列定义
 const columns = [
   {
-    title: '名称',
+    title: '配置名称',
     dataIndex: 'name',
     key: 'name',
     searchable: true,
   },
   {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
+    title: '配置值',
+    dataIndex: 'value',
+    key: 'value',
+    searchable: true,
+  },
+  {
+    title: '描述',
+    dataIndex: 'description',
+    key: 'description',
     searchable: true,
   },
   {
@@ -27,25 +33,26 @@ const columns = [
 
 // 从列定义中获取可搜索字段
 const searchableFields = columns
-  .filter((col) => col.searchable)
-  .map((col) => col.dataIndex)
+  .filter((col) => 'searchable' in col && col.searchable)
+  .map((col) => ('dataIndex' in col ? col.dataIndex : null))
+  .filter((field): field is string => field !== null)
 
 // 默认搜索匹配函数
-const defaultSearchMatcher = (item: MonitorItem, keyword: string): boolean => {
+const defaultSearchMatcher = (item: ConfigItem, keyword: string): boolean => {
   if (!keyword) return true
   const searchText = keyword.toLowerCase()
 
   return searchableFields.some((field) => {
-    const value = item[field as keyof MonitorItem]
+    const value = item[field as keyof ConfigItem]
     return value && String(value).toLowerCase().includes(searchText)
   })
 }
 
-export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
+export function useConfigPage(searchMatcher = defaultSearchMatcher) {
   const formRef = ref()
   const state = reactive({
     loading: false,
-    rawTableData: [] as MonitorItem[],
+    rawTableData: [] as ConfigItem[],
     pagination: {
       current: 1,
       pageSize: 10,
@@ -57,7 +64,7 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
     drawer: {
       visible: false,
       title: '',
-      initialValues: {} as Partial<MonitorItem>,
+      initialValues: {} as Partial<ConfigItem>,
     },
   })
 
@@ -92,10 +99,7 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   const loadTableData = async () => {
     state.loading = true
     try {
-      const { items, total } = await monitorApi.getList({
-        page: 1,
-        pageSize: 1000, // 获取所有数据进行前端分页
-      })
+      const { items } = await configApi.getList()
       state.rawTableData = items
     } catch (error) {
       message.error('加载数据失败')
@@ -111,17 +115,17 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   }
 
   // 处理表格操作
-  const handleTableOperation = async (key: string, record: MonitorItem) => {
+  const handleTableOperation = async (key: string, record: ConfigItem) => {
     switch (key) {
       case 'edit':
-        state.drawer.title = '编辑监控项'
+        state.drawer.title = '编辑配置'
         state.drawer.initialValues = { ...record }
         state.drawer.open = true
         break
       case 'delete':
         try {
           if (record.id) {
-            await monitorApi.delete(record.id)
+            await configApi.delete(record.id)
             message.success('删除成功')
             loadTableData()
           }
@@ -136,7 +140,7 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   const handleToolbarAction = (action: string, ...args: any[]) => {
     switch (action) {
       case 'add':
-        state.drawer.title = '新增监控项'
+        state.drawer.title = '新增配置'
         state.drawer.initialValues = {}
         state.drawer.open = true
         break
@@ -153,13 +157,13 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   }
 
   // 处理抽屉提交
-  const handleDrawerSubmit = async (values: MonitorItem) => {
+  const handleDrawerSubmit = async (values: ConfigItem) => {
     try {
       if (values.id) {
-        await monitorApi.update(values.id, values)
+        await configApi.update(values.id, values)
         message.success('更新成功')
       } else {
-        await monitorApi.create(values)
+        await configApi.create(values)
         message.success('创建成功')
       }
       state.drawer.open = false
@@ -172,7 +176,7 @@ export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
   return {
     formRef,
     state,
-    columns, // 导出列定义
+    columns,
     tableData,
     tableOperations,
     loadTableData,

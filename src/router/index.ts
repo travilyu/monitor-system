@@ -7,27 +7,38 @@ import {
 } from 'vue-router'
 import BaseLayout from '@/components/layout/BaseLayout.vue'
 import { TOKEN_KEY } from '@/api/request'
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: BaseLayout,
-    redirect: '/monitor',
+    redirect: '/line/monitor',
     children: [
       {
-        path: '/monitor',
-        name: 'Monitor',
-        component: () => import('@/views/business/Monitor.vue'),
+        path: '/line/monitor',
+        name: 'LineMonitor',
+        component: () => import('@/views/business/line/Monitor.vue'),
         meta: {
-          title: '监控管理',
+          title: '线路监控',
           icon: 'MonitorOutlined',
+          requiresAuth: true,
         },
       },
       {
-        path: '/config',
-        name: 'Config',
-        component: () => import('@/views/business/Config.vue'),
+        path: '/line/analysis',
+        name: 'QualityAnalysis',
+        component: () => import('@/views/business/line/Analysis.vue'),
         meta: {
-          title: '配置管理',
+          title: '质量分析',
+          icon: 'LineChartOutlined',
+        },
+      },
+      {
+        path: '/config/slice',
+        name: 'SliceManage',
+        component: () => import('@/views/business/config/Slice.vue'),
+        meta: {
+          title: '切片管理',
           icon: 'SettingOutlined',
         },
       },
