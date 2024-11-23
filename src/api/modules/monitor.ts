@@ -5,17 +5,19 @@ import type { MonitorListResponse } from '@/types/api'
 
 export const monitorApi = {
   async getList(params: MonitorParams) {
-    if (import.meta.env.DEV) {
+    if (process.env.NODE_ENV === 'development') {
+      const mockData: MonitorItem[] = Array(50)
+        .fill(0)
+        .map((_, index) => ({
+          id: index + 1,
+          name: `监控项 ${index + 1}`,
+          status: index % 2 === 0 ? 'enabled' : 'disabled',
+          createTime: new Date().toISOString(),
+        }))
+
       const mockResponse: MonitorListResponse = {
-        total: 100,
-        items: Array(10)
-          .fill(0)
-          .map((_, index) => ({
-            id: index + 1,
-            name: `监控项 ${index + 1}`,
-            status: index % 2 ? 'enabled' : 'disabled',
-            createTime: new Date().toISOString(),
-          })),
+        total: mockData.length,
+        items: mockData,
       }
       return mockResponse
     }

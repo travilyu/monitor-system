@@ -2,10 +2,12 @@
   <div class="monitor-page">
     <BaseTable
       :columns="columns"
-      :data-source="state.tableData"
+      :data-source="tableData"
       :loading="state.loading"
       :pagination="state.pagination"
+      :operations="tableOperations"
       @change="handleTableChange"
+      @operation="handleTableOperation"
     >
       <template #toolbar>
         <TableToolbar @action="handleToolbarAction" />
@@ -13,7 +15,7 @@
     </BaseTable>
 
     <SlideDrawer
-      v-model:visible="state.drawer.visible"
+      v-model="state.drawer.visible"
       :title="state.drawer.title"
       @ok="handleDrawerOk"
     >
@@ -29,27 +31,10 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useMonitorPage } from '@/composables/useMonitorPage'
-import type { TableColumnType } from 'ant-design-vue'
-
-// 表格列定义
-const columns: TableColumnType[] = [
-  {
-    title: '名称',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-  },
-  {
-    title: '操作',
-    key: 'action',
-    fixed: 'right',
-    width: 120,
-  },
-]
+import BaseTable from '@/components/table/TableWithActions.vue'
+import TableToolbar from '@/components/display/Table/TableToolbar.vue'
+import SlideDrawer from '@/components/modal/SlideDrawer.vue'
+import ConfigForm from '@/components/modal/ConfigForm.vue'
 
 // 表单字段定义
 const formFields = [
@@ -72,11 +57,15 @@ const formFields = [
   },
 ]
 
-// 使用业务逻辑钩子
 const {
+  formRef,
   state,
+  columns, // 从 useMonitorPage 中获取列定义
+  tableData,
+  tableOperations,
   loadTableData,
   handleTableChange,
+  handleTableOperation,
   handleToolbarAction,
   handleDrawerSubmit,
 } = useMonitorPage()
