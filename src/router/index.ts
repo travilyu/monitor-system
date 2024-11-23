@@ -1,9 +1,9 @@
 import {
   createRouter,
   createWebHistory,
-  RouteRecordRaw,
-  NavigationGuardNext,
-  RouteLocationNormalized,
+  type RouteRecordRaw,
+  type NavigationGuardNext,
+  type RouteLocationNormalized,
 } from 'vue-router'
 import BaseLayout from '@/components/layout/BaseLayout.vue'
 import { TOKEN_KEY } from '@/api/request'

@@ -3,14 +3,14 @@
     <TableToolbar v-bind="toolbarProps" @action="handleToolbarAction" />
 
     <a-table
-      :columns="columns"
+      :columns="mergedColumns"
       :data-source="dataSource"
       :loading="loading"
       :pagination="pagination"
       @change="handleTableChange"
     >
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'action'">
+        <template v-if="column.key === 'operation'">
           <TableOperations
             :record="record"
             :operations="operations"
@@ -57,6 +57,23 @@ const emit = defineEmits<{
   (e: 'operation', key: string, record: any): void
   (e: 'toolbar-action', action: string, ...args: any[]): void
 }>()
+
+// 添加操作列
+const mergedColumns = computed(() => {
+  if (!props.operations?.length) {
+    return props.columns
+  }
+
+  return [
+    ...props.columns,
+    {
+      title: '操作',
+      key: 'operation',
+      fixed: 'right',
+      width: 120,
+    },
+  ]
+})
 
 const handleTableChange = (pag: any) => {
   emit('change', pag)

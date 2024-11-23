@@ -53,7 +53,6 @@
 </template>
 
 <script setup lang="ts">
-import type { Component } from '@vue/runtime-core'
 import ChartRow from './ChartRow.vue'
 import LabelValue from './LabelValue.vue'
 
@@ -62,11 +61,11 @@ interface ChartData {
   value: number
 }
 
-interface ChartConfig {
+export interface ChartConfig {
   title: string
   data: ChartData[]
   unit?: string
-  color?: string
+  color?: string | ((value: number) => string)
 }
 
 interface Props {

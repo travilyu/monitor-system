@@ -5,7 +5,14 @@
     @ok="handleOk"
     @close="handleClose"
   >
-    <a-form :model="formState" :rules="rules" ref="formRef">
+    <a-form
+      :model="formState"
+      :rules="rules"
+      ref="formRef"
+      :label-col="{ span: 4 }"
+      :wrapper-col="{ span: 18 }"
+      layout="vertical"
+    >
       <a-form-item label="名称" name="name">
         <a-input v-model:value="formState.name" />
       </a-form-item>
@@ -13,10 +20,13 @@
         <a-textarea v-model:value="formState.description" />
       </a-form-item>
       <a-form-item label="VLAN" name="vlan">
-        <a-input-number v-model:value="formState.vlan" />
+        <a-input-number style="width: 100%" v-model:value="formState.vlan" />
       </a-form-item>
       <a-form-item label="带宽(Mbps)" name="bandwidth">
-        <a-input-number v-model:value="formState.bandwidth" />
+        <a-input-number
+          style="width: 100%"
+          v-model:value="formState.bandwidth"
+        />
       </a-form-item>
     </a-form>
   </SlideDrawer>

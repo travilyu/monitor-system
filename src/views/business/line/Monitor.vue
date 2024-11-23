@@ -40,6 +40,7 @@ import { lineMonitorApi } from '@/api/modules/lineMonitor'
 import StatisticCard from '@/components/business/StatisticCard/index.vue'
 import EditLineModal from './components/EditLineModal.vue'
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import type { ChartConfig } from '@/components/business/StatisticCard/index.vue'
 
 const lines = ref<LineData[]>([])
 const loading = ref(false)
@@ -71,11 +72,11 @@ const fetchLines = async () => {
   }
 }
 
-const formatBandwidth = (bps: number) => {
-  return (bps / 1000000).toFixed(2) // 转换为Mbps
-}
+// const formatBandwidth = (bps: number) => {
+//   return (bps / 1000000).toFixed(2) // 转换为Mbps
+// }
 
-const getLineCharts = (line: LineData) => {
+const getLineCharts = (line: LineData): ChartConfig[] => {
   return [
     {
       title: '吞吐量',

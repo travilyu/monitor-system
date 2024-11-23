@@ -14,10 +14,12 @@ export const API_ROUTES = {
     growth: '/line/monitor/growth',
   },
   analysis: {
-    list: '/line/analysis/list',
-    create: '/line/analysis',
-    update: '/line/analysis/:id',
-    delete: '/line/analysis/:id',
+    list: '/ping/task/list',
+    create: '/ping/task/create',
+    update: '/ping/task/:id',
+    delete: '/ping/task/:id',
+    start: '/ping/task/:id/start',
+    stop: '/ping/task/:id/stop',
   },
   config: {
     slice: {

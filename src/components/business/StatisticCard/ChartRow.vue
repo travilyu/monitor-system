@@ -66,17 +66,17 @@ const computedColor = computed(() => {
 }
 
 .chart-title {
-  font-size: 14px;
+  font-size: 12px;
   color: rgba(0, 0, 0, 0.85);
 }
 
 .chart-value {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .chart-unit {
-  font-size: 12px;
+  font-size: 10px;
   color: rgba(0, 0, 0, 0.45);
   margin-left: 4px;
 }

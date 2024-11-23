@@ -1,89 +1,134 @@
-import { ref, reactive, computed } from 'vue'
-import { message } from 'ant-design-vue'
-import { api } from '@/api/modules/analysis'
-import type { AnalysisItem } from '@/types/analysis'
-
-// 表格列定义
-const columns = [
-  {
-    title: '名称',
-    dataIndex: 'name',
-    key: 'name',
-    searchable: true,
-  },
-  {
-    title: '描述',
-    dataIndex: 'description',
-    key: 'description',
-    searchable: true,
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-  },
-  {
-    title: '创建时间',
-    dataIndex: 'createTime',
-    key: 'createTime',
-  },
-  {
-    title: '操作',
-    key: 'action',
-    fixed: 'right',
-    width: 120,
-  },
-] as const
-
-// 表格操作定义
-const tableOperations = [
-  {
-    key: 'edit',
-    label: '编辑',
-    type: 'link',
-  },
-  {
-    key: 'delete',
-    label: '删除',
-    type: 'link',
-    danger: true,
-  },
-]
+import { ref, reactive, h } from 'vue'
+import { message, Tag } from 'ant-design-vue'
+import type { ColumnType } from 'ant-design-vue/es/table'
+import type { TablePaginationConfig } from 'ant-design-vue/es/table/interface'
+import { analysisApi } from '@/api/modules/analysis'
+import type {
+  AnalysisTableItem,
+  AnalysisFormState,
+  AnalysisState,
+} from '@/types/analysis'
 
 export function useAnalysisPage() {
-  const formRef = ref()
-  const state = reactive({
+  const state = reactive<AnalysisState>({
     loading: false,
-    rawTableData: [] as AnalysisItem[],
+    drawer: {
+      visible: false,
+      title: '',
+      initialValues: {},
+    },
     pagination: {
       current: 1,
       pageSize: 10,
       total: 0,
     },
-    search: {
-      keyword: '',
-    },
-    drawer: {
-      visible: false,
-      title: '',
-      initialValues: {} as Partial<AnalysisItem>,
-    },
   })
 
-  // 计算过滤后的表格数据
-  const tableData = computed(() => {
-    const start = (state.pagination.current - 1) * state.pagination.pageSize
-    const end = start + state.pagination.pageSize
-    return state.rawTableData.slice(start, end)
-  })
+  const columns: ColumnType[] = [
+    {
+      title: '名称',
+      dataIndex: 'name',
+      key: 'name',
+      width: 180,
+    },
+    {
+      title: '测试类型',
+      dataIndex: 'test_type',
+      key: 'test_type',
+      width: 120,
+    },
+    {
+      title: '探测报文数',
+      dataIndex: 'probe_count',
+      key: 'probe_count',
+      width: 100,
+    },
+    {
+      title: '间隔(ms)',
+      dataIndex: 'interval',
+      key: 'interval',
+      width: 100,
+    },
+    {
+      title: '重试次数',
+      dataIndex: 'max_retries',
+      key: 'max_retries',
+      width: 100,
+    },
+    {
+      title: '超时时间(s)',
+      dataIndex: 'timeout',
+      key: 'timeout',
+      width: 100,
+    },
+    {
+      title: '目标地址',
+      dataIndex: 'dest_ip',
+      key: 'dest_ip',
+      width: 140,
+    },
+    {
+      title: '绑定线路',
+      dataIndex: 'line_id',
+      key: 'line_id',
+      width: 120,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      customRender: ({ text }: { text: 'active' | 'inactive' }) => {
+        const status: Record<
+          'active' | 'inactive',
+          { text: string; status: 'success' | 'error' }
+        > = {
+          active: { text: '运行中', status: 'success' },
+          inactive: { text: '已停止', status: 'error' },
+        }
+        const statusInfo = status[text] || { text, status: 'default' }
+        return h(Tag, { color: statusInfo.status }, () => statusInfo.text)
+      },
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 180,
+      customRender: ({ text }: { text: string }) => {
+        return text ? new Date(text).toLocaleString() : '-'
+      },
+    },
+  ]
 
-  // 加载表格数据
+  const tableData = ref<AnalysisTableItem[]>([])
+
+  const tableOperations: {
+    key: string
+    label: string
+    type?: 'link' | 'primary' | 'default' | 'danger'
+  }[] = [
+    {
+      key: 'edit',
+      label: '编辑',
+      type: 'link',
+    },
+    {
+      key: 'delete',
+      label: '删除',
+      type: 'link',
+    },
+  ]
+
   const loadTableData = async () => {
     state.loading = true
     try {
-      const data = await api.getList()
-      state.rawTableData = data.items
-      state.pagination.total = data.total
+      const { items, total } = await analysisApi.getList({
+        page: state.pagination.current,
+        pageSize: state.pagination.pageSize,
+      })
+      tableData.value = items
+      state.pagination.total = total
     } catch (error) {
       message.error('加载数据失败')
     } finally {
@@ -91,71 +136,57 @@ export function useAnalysisPage() {
     }
   }
 
-  // 处理表格变化
-  const handleTableChange = (pagination: any) => {
-    state.pagination.current = pagination.current
-    state.pagination.pageSize = pagination.pageSize
+  const handleTableChange = (pagination: TablePaginationConfig) => {
+    state.pagination.current = pagination.current || 1
+    state.pagination.pageSize = pagination.pageSize || 10
+    loadTableData()
   }
 
-  // 处理表格操作
-  const handleTableOperation = async (key: string, record: AnalysisItem) => {
-    switch (key) {
-      case 'edit':
-        state.drawer.title = '编辑分析'
-        state.drawer.initialValues = { ...record }
-        state.drawer.visible = true
-        break
-      case 'delete':
-        try {
-          await lineApi.analysis.delete(record.id!)
-          message.success('删除成功')
-          loadTableData()
-        } catch (error) {
-          message.error('删除失败')
-        }
-        break
-    }
-  }
-
-  // 处理工具栏操作
-  const handleToolbarAction = (action: string, ...args: any[]) => {
-    switch (action) {
-      case 'add':
-        state.drawer.title = '新增分析'
-        state.drawer.initialValues = {}
-        state.drawer.visible = true
-        break
-      case 'refresh':
-        state.search.keyword = ''
-        state.pagination.current = 1
+  const handleTableOperation = async (
+    key: string,
+    record: AnalysisTableItem
+  ) => {
+    if (key === 'edit') {
+      state.drawer.title = '编辑分析'
+      state.drawer.initialValues = record
+      state.drawer.visible = true
+    } else if (key === 'delete') {
+      try {
+        await analysisApi.delete(record.id)
+        message.success('删除成功')
         loadTableData()
-        break
-      case 'search':
-        state.search.keyword = args[0]
-        state.pagination.current = 1
-        break
+      } catch {
+        message.error('删除失败')
+      }
     }
   }
 
-  // 处理抽屉提交
-  const handleDrawerSubmit = async (values: AnalysisItem) => {
+  const handleToolbarAction = (action: string) => {
+    if (action === 'add') {
+      state.drawer.title = '新建分析'
+      state.drawer.initialValues = {}
+      state.drawer.visible = true
+    } else if (action === 'refresh') {
+      loadTableData()
+    }
+  }
+
+  const handleDrawerSubmit = async (values: AnalysisFormState) => {
     try {
-      if (values.id) {
-        await lineApi.analysis.update(values.id, values)
-        message.success('更新成功')
+      if (state.drawer.initialValues.id) {
+        await analysisApi.update(state.drawer.initialValues.id, values)
       } else {
-        await lineApi.analysis.create(values)
-        message.success('创建成功')
+        await analysisApi.create(values)
       }
+      message.success('保存成功')
       state.drawer.visible = false
       loadTableData()
-    } catch (error) {
-      message.error('操作失败')
+    } catch {
+      message.error('保存失败')
     }
   }
 
   return {
-    formRef,
     state,
     columns,
     tableData,
