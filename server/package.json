@@ -1,0 +1,32 @@
+{
+  "name": "network-monitor-server",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "restify": "^11.1.0",
+    "restify-errors": "^8.0.2",
+    "sequelize": "^6.37.1",
+    "mariadb": "^3.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "uuid": "^9.0.1",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/restify": "^8.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.11.24",
+    "@types/validator": "^13.11.9",
+    "@types/uuid": "^9.0.8",
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.3.3",
+    "ts-node-dev": "^2.0.0"
+  }
+}
