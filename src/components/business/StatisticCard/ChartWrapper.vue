@@ -10,14 +10,10 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { TinyArea } from '@antv/g2plot'
-
-interface ChartData {
-  timestamp: string
-  value: number
-}
+import type { TimeSeriesData } from '@/types/lineMonitor'
 
 interface Props {
-  data: ChartData[]
+  data: TimeSeriesData[]
   loading?: boolean
   color?: string
   unit?: string

@@ -55,15 +55,11 @@
 <script setup lang="ts">
 import ChartRow from './ChartRow.vue'
 import LabelValue from './LabelValue.vue'
-
-interface ChartData {
-  timestamp: string
-  value: number
-}
+import type { TimeSeriesData } from '@/types/lineMonitor'
 
 export interface ChartConfig {
   title: string
-  data: ChartData[]
+  data: TimeSeriesData[]
   unit?: string
   color?: string | ((value: number) => string)
 }

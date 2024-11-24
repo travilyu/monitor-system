@@ -1,7 +1,7 @@
 <template>
   <SlideDrawer
+    :title="lineData ? '编辑线路' : '新增线路'"
     v-model="isVisible"
-    title="编辑线路"
     @ok="handleOk"
     @close="handleClose"
   >
@@ -48,25 +48,33 @@ const loading = ref(false)
 const formRef = ref()
 const isVisible = ref(false)
 
-const formState = ref({
+// 只选取表单需要的字段
+type FormState = Pick<LineData, 'name' | 'description' | 'vlan' | 'bandwidth'>
+
+const initialFormState: FormState = {
   name: '',
   description: '',
   vlan: 0,
   bandwidth: 0,
-})
+}
 
-// 使用 watchEffect 简化监听逻辑
+const formState = ref<FormState>({ ...initialFormState })
+
 watchEffect(() => {
   isVisible.value = props.visible
 })
 
 watchEffect(() => {
-  if (props.lineData) {
-    formState.value = { ...props.lineData }
-  }
+  formState.value = props.lineData
+    ? {
+        name: props.lineData.name,
+        description: props.lineData.description,
+        vlan: props.lineData.vlan,
+        bandwidth: props.lineData.bandwidth,
+      }
+    : { ...initialFormState }
 })
 
-// 监听本地 isVisible 的变化来通知父组件
 watchEffect(() => {
   emit('update:visible', isVisible.value)
 })
@@ -75,11 +83,19 @@ const handleOk = async () => {
   try {
     await formRef.value.validate()
     loading.value = true
-    await lineMonitorApi.updateLine(props.lineData!.id, formState.value)
+
+    if (props.lineData) {
+      // 更新线路
+      await lineMonitorApi.updateLine(props.lineData.id, formState.value)
+    } else {
+      // 创建新线路，只传递表单字段
+      await lineMonitorApi.createLine(formState.value)
+    }
+
     emit('success')
     isVisible.value = false
   } catch (error) {
-    console.error('表单验证失败:', error)
+    console.error(props.lineData ? '更新线路失败:' : '创建线路失败:', error)
   } finally {
     loading.value = false
   }
@@ -87,6 +103,8 @@ const handleOk = async () => {
 
 const handleClose = () => {
   isVisible.value = false
+  formState.value = { ...initialFormState }
+  formRef.value?.clearValidate()
 }
 
 const rules = {

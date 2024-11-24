@@ -9,12 +9,12 @@ export interface LineData {
   description: string
   vlan: number
   bandwidth: number // 单位bps
-  throughputMonitoring: TimeSeriesData[]
-  latencyMonitoring: TimeSeriesData[]
-  packetLossMonitoring: TimeSeriesData[]
-  jitterMonitoring: TimeSeriesData[]
-  qualityAnalysisPolicy: string
-  status: 'success' | 'error'
+  throughputMonitoring?: TimeSeriesData[]
+  latencyMonitoring?: TimeSeriesData[]
+  packetLossMonitoring?: TimeSeriesData[]
+  jitterMonitoring?: TimeSeriesData[]
+  qualityAnalysisPolicy?: string
+  status?: 'success' | 'error'
 }
 
 export interface MonitoringData {

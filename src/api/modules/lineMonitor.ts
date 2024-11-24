@@ -57,4 +57,12 @@ export const lineMonitorApi = {
     const url = API_ROUTES.lineMonitor.delete.replace(':id', id)
     return request.delete(url)
   },
+
+  createLine(data: Omit<LineData, 'id'>) {
+    return request({
+      url: '/api/lines',
+      method: 'POST',
+      data,
+    })
+  },
 }
