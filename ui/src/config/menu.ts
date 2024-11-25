@@ -1,6 +1,10 @@
 import MonitorOutlined from '@ant-design/icons-vue/MonitorOutlined'
 import SettingOutlined from '@ant-design/icons-vue/SettingOutlined'
 import LineChartOutlined from '@ant-design/icons-vue/LineChartOutlined'
+import AppstoreOutlined from '@ant-design/icons-vue/AppstoreOutlined'
+import SafetyCertificateOutlined from '@ant-design/icons-vue/SafetyCertificateOutlined'
+import GlobalOutlined from '@ant-design/icons-vue/GlobalOutlined'
+import ApiOutlined from '@ant-design/icons-vue/ApiOutlined'
 import type { Component } from 'vue'
 
 export interface MenuItem {
@@ -40,10 +44,28 @@ export const MENU_ITEMS: MenuItem[] = [
     icon: SettingOutlined,
     children: [
       {
-        key: 'slice-manage',
+        key: 'slice',
         label: '切片管理',
-        icon: SettingOutlined,
+        icon: AppstoreOutlined,
         path: '/config/slice',
+      },
+      {
+        key: 'firewall',
+        label: '防火墙',
+        icon: SafetyCertificateOutlined,
+        path: '/config/firewall',
+      },
+      {
+        key: 'behavior',
+        label: '上网行为',
+        icon: GlobalOutlined,
+        path: '/config/behavior',
+      },
+      {
+        key: 'vpn',
+        label: 'VPN',
+        icon: ApiOutlined,
+        path: '/config/vpn',
       },
     ],
   },

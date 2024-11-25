@@ -15,7 +15,7 @@ export interface LineData {
   packetLossMonitoring?: TimeSeriesData[]
   jitterMonitoring?: TimeSeriesData[]
   qualityAnalysisPolicy?: string
-  status?: 'success' | 'error'
+  status?: string
 }
 
 export interface MonitoringData {

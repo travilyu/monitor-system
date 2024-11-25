@@ -20,14 +20,8 @@ async function getLineAnalysis(lineUuid: string) {
     })
 
     return {
-      status: task
-        ? task.status === 'active'
-          ? 'success'
-          : 'error'
-        : 'warning',
-      qualityAnalysisPolicy: task
-        ? `/api/line-analysis/task/${task.uuid}`
-        : null,
+      status: task ? task.status : '',
+      qualityAnalysisPolicy: task ? task.name : null,
     }
   } catch (error) {
     console.error('Failed to get line analysis:', error)

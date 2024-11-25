@@ -53,14 +53,14 @@ export function useAnalysisPage() {
     },
     {
       title: '测试类型',
-      dataIndex: 'test_type',
-      key: 'test_type',
+      dataIndex: 'testType',
+      key: 'testType',
       width: 120,
     },
     {
       title: '探测报文数',
-      dataIndex: 'probe_count',
-      key: 'probe_count',
+      dataIndex: 'probeCount',
+      key: 'probeCount',
       width: 100,
     },
     {
@@ -71,8 +71,8 @@ export function useAnalysisPage() {
     },
     {
       title: '重试次数',
-      dataIndex: 'max_retries',
-      key: 'max_retries',
+      dataIndex: 'maxRetries',
+      key: 'maxRetries',
       width: 100,
     },
     {
@@ -83,28 +83,28 @@ export function useAnalysisPage() {
     },
     {
       title: '目标地址',
-      dataIndex: 'dest_ip',
-      key: 'dest_ip',
+      dataIndex: 'destIp',
+      key: 'destIp',
       width: 140,
     },
     {
       title: '下一跳地址',
-      dataIndex: 'next_hop_address',
-      key: 'next_hop_address',
+      dataIndex: 'nextHopAddress',
+      key: 'nextHopAddress',
       width: 140,
       customRender: ({ text }: { text: string }) => text || '--',
     },
     {
       title: '源地址',
-      dataIndex: 'source_ip',
-      key: 'source_ip',
+      dataIndex: 'sourceIp',
+      key: 'sourceIp',
       width: 140,
       customRender: ({ text }: { text: string }) => text || '--',
     },
     {
       title: '绑定线路',
-      dataIndex: 'line_uuid',
-      key: 'line_uuid',
+      dataIndex: 'lineUuid',
+      key: 'lineUuid',
       width: 120,
       customRender: ({ text }: { text: string }) => {
         if (!text) return '--'
@@ -115,8 +115,8 @@ export function useAnalysisPage() {
 
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 180,
       customRender: ({ text }: { text: string }) => {
         return text ? new Date(text).toLocaleString() : '-'

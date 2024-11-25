@@ -25,10 +25,9 @@
         <LabelValue label="VLAN" :value="vlan" />
         <LabelValue label="带宽" :value="bandwidth" unit="Mbps" />
         <LabelValue
-          v-if="qualityAnalysisPolicy"
           label="质量分析策略"
-          :value="qualityAnalysisPolicy"
-          :link="qualityAnalysisPolicy"
+          :value="qualityAnalysisPolicy || '未配置'"
+          style="color: deepskyblue"
         />
       </div>
 
@@ -57,6 +56,7 @@ export interface ChartConfig {
   title: string
   data: TimeSeriesData[]
   unit?: string
+  // 颜色可以是固定的字符串,也可以是一个根据数值返回颜色的函数
   color?: string | ((value: number) => string)
 }
 
@@ -67,7 +67,7 @@ interface Props {
   bandwidth: number | string
   loading?: boolean
   charts?: ChartConfig[]
-  status?: 'success' | 'error'
+  status?: string
   qualityAnalysisPolicy?: string
 }
 

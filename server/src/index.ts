@@ -4,6 +4,7 @@ import { initDatabase } from './db'
 import { setupAuthRoutes } from './auth'
 import { setupLineRoutes } from './lines'
 import { setupAnalysisRoutes } from './analysis'
+import { setupSliceRoutes } from './slice'
 
 dotenv.config()
 
@@ -34,6 +35,7 @@ server.opts('/*', (req, res, next) => {
 setupAuthRoutes(server)
 setupLineRoutes(server)
 setupAnalysisRoutes(server)
+setupSliceRoutes(server)
 
 // 初始化数据库并启动服务器
 async function start() {

@@ -7,15 +7,6 @@
       </a>
       <template #overlay>
         <a-menu>
-          <a-menu-item key="profile">
-            <UserOutlined />
-            个人信息
-          </a-menu-item>
-          <a-menu-item key="settings">
-            <SettingOutlined />
-            系统设置
-          </a-menu-item>
-          <a-menu-divider />
           <a-menu-item key="logout" @click="handleLogout">
             <LogoutOutlined />
             退出登录
@@ -29,8 +20,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import UserOutlined from '@ant-design/icons-vue/UserOutlined'
-import SettingOutlined from '@ant-design/icons-vue/SettingOutlined'
 import LogoutOutlined from '@ant-design/icons-vue/LogoutOutlined'
 import { useUserStore } from '@/stores/user'
 

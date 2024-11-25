@@ -39,7 +39,34 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/business/config/Slice.vue'),
         meta: {
           title: '切片管理',
-          icon: 'SettingOutlined',
+          icon: 'AppstoreOutlined',
+        },
+      },
+      {
+        path: '/config/firewall',
+        name: 'Firewall',
+        component: () => import('@/views/business/config/Firewall.vue'),
+        meta: {
+          title: '防火墙',
+          icon: 'SafetyCertificateOutlined',
+        },
+      },
+      {
+        path: '/config/behavior',
+        name: 'Behavior',
+        component: () => import('@/views/business/config/Behavior.vue'),
+        meta: {
+          title: '上网行为',
+          icon: 'GlobalOutlined',
+        },
+      },
+      {
+        path: '/config/vpn',
+        name: 'VPN',
+        component: () => import('@/views/business/config/VPN.vue'),
+        meta: {
+          title: 'VPN',
+          icon: 'ApiOutlined',
         },
       },
     ],

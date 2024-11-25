@@ -32,6 +32,7 @@ import { computed } from 'vue'
 import TableToolbar from '@/components/display/Table/TableToolbar.vue'
 import TableOperations from '@/components/display/Table/TableOperations.vue'
 import type { TableProps } from 'ant-design-vue'
+import type { Operation } from '@/components/display/Table/TableOperations.vue'
 
 interface Props {
   columns: TableProps['columns']
@@ -51,7 +52,7 @@ const props = withDefaults(defineProps<Props>(), {
   }),
 })
 
-const defaultOperations = computed(() => [
+const defaultOperations = computed<Operation[]>(() => [
   { key: 'edit', label: '编辑', type: 'link' },
   { key: 'delete', label: '删除', type: 'link', danger: true },
 ])
