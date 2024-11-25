@@ -1,0 +1,16 @@
+metrics:
+  throughput:
+    query: 'rate(interface_bytes_total{line_id="{{lineId}}"}[5m]) * 8'
+    description: '线路吞吐量 (bps)'
+
+  latency:
+    query: 'avg_over_time(ping_latency_ms{line_id="{{lineId}}"}[5m])'
+    description: '线路延迟 (ms)'
+
+  packet_loss:
+    query: 'rate(ping_loss_total{line_id="{{lineId}}"}[5m]) * 100'
+    description: '丢包率 (%)'
+
+  jitter:
+    query: 'stddev_over_time(ping_latency_ms{line_id="{{lineId}}"}[5m])'
+    description: '抖动 (ms)'

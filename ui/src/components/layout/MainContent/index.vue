@@ -4,8 +4,10 @@
       :collapsed="collapsed"
       @toggle-collapsed="$emit('toggle-collapsed')"
     />
-    <a-layout-content class="content">
-      <router-view />
+    <a-layout-content class="content-wrapper">
+      <div class="scrollable-content">
+        <router-view />
+      </div>
     </a-layout-content>
   </a-layout>
 </template>
@@ -25,12 +27,24 @@ defineEmits<{
 
 <style scoped>
 .main-content {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.content {
+.content-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.scrollable-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   padding: 24px;
-  min-height: calc(100vh - 64px);
+  overflow-y: auto;
   background: #f0f2f5;
 }
 </style>

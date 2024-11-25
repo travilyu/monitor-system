@@ -3,8 +3,9 @@ import { API_ROUTES } from '../config'
 import type { LineData } from '@/types/lineMonitor'
 
 // 带宽单位转换函数
-const convertBandwidthToMbps = (bps: number) => (bps / 1000000).toFixed(2)
-const convertBandwidthToBps = (mbps: number) => mbps * 1000000
+const convertBandwidthToMbps = (bps: number | string) =>
+  (Number(bps) / 1000000).toFixed(2)
+const convertBandwidthToBps = (mbps: number | string) => Number(mbps) * 1000000
 
 export const lineMonitorApi = {
   async getLines() {
@@ -48,5 +49,15 @@ export const lineMonitorApi = {
       method: 'POST',
       data: convertedData,
     })
+  },
+
+  // 获取线路选项列表
+  async getLineOptions() {
+    const { data } = await this.getLines()
+    return data.map((line) => ({
+      label: line.name,
+      value: line.uuid,
+      description: line.description,
+    }))
   },
 }

@@ -11,6 +11,7 @@
         showRefresh: true,
         showSearch: true,
       }"
+      :scroll="{ x: 1300 }"
       @change="handleTableChange"
       @operation="handleTableOperation"
       @toolbar-action="handleToolbarAction"
@@ -20,7 +21,6 @@
       v-model="state.drawer.visible"
       :title="state.drawer.title"
       :initial-values="state.drawer.initialValues"
-      @close="handleDrawerClose"
       @submit="handleDrawerSubmit"
     />
   </div>
@@ -41,7 +41,6 @@ const {
   handleTableOperation,
   handleToolbarAction,
   handleDrawerSubmit,
-  handleDrawerClose,
 } = useAnalysisPage()
 
 // 初始化加载数据

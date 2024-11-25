@@ -13,14 +13,14 @@
 </template>
 
 <script setup lang="ts">
-interface Operation {
+export interface Operation {
   key: string
   label: string
   type?: 'link' | 'primary' | 'default' | 'danger'
 }
 
 interface Props {
-  operations: Operation[]
+  operations?: Operation[]
   record: any
 }
 

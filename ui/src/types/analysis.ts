@@ -31,7 +31,7 @@ export interface AnalysisFormState {
   destIp: string
   nextHopAddress?: string
   sourceIp?: string
-  lineId: string
+  lineUuid: string | undefined
 }
 
 export interface AnalysisTableItem extends AnalysisFormState {

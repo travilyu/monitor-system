@@ -64,7 +64,7 @@ interface Props {
   title: string
   description?: string
   vlan: number
-  bandwidth: number
+  bandwidth: number | string
   loading?: boolean
   charts?: ChartConfig[]
   status?: 'success' | 'error'

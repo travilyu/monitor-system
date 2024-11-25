@@ -5,10 +5,11 @@ export interface TimeSeriesData {
 
 export interface LineData {
   id: string
+  uuid: string
   name: string
   description: string
   vlan: number
-  bandwidth: number // 单位bps
+  bandwidth: number | string // 单位bps
   throughputMonitoring?: TimeSeriesData[]
   latencyMonitoring?: TimeSeriesData[]
   packetLossMonitoring?: TimeSeriesData[]

@@ -1,28 +1,41 @@
 import * as restify from 'restify'
-import { Line } from './models'
+import { Line, Analysis } from './models'
 import { authMiddleware } from './auth'
+import { prometheusService } from './services/prometheus'
 
-// 模拟从 Prometheus 获取监控数据
-async function getMetricsFromPrometheus(lineId: string, metricType: string) {
-  // TODO: 实现实际的 Prometheus 查询
-  return Array(24)
-    .fill(0)
-    .map((_, i) => ({
-      timestamp: new Date(Date.now() - (23 - i) * 3600 * 1000).toISOString(),
-      value: Math.random() * 100,
-    }))
+// 从 Prometheus 获取监控数据
+async function getMetrics(lineId: string) {
+  return prometheusService.getAllMetrics(lineId)
 }
 
-// 模拟从策略服务获取线路状态
-async function getLineStatus(lineId: string) {
-  // TODO: 实现实际的策略服务查询
-  return Math.random() > 0.7 ? 'error' : 'success'
-}
+// 获取线路状态和策略
+async function getLineAnalysis(lineUuid: string) {
+  try {
+    // 获取该线路的分析任务
+    const task = await Analysis.findOne({
+      where: {
+        lineUuid,
+      },
+      order: [['updatedAt', 'DESC']], // 获取最新的任务
+    })
 
-// 模拟从策略服务获取质量分析策略
-async function getQualityAnalysisPolicy(lineId: string) {
-  // TODO: 实现实际的策略服务查询
-  return `/analysis/policy/${lineId}`
+    return {
+      status: task
+        ? task.status === 'active'
+          ? 'success'
+          : 'error'
+        : 'warning',
+      qualityAnalysisPolicy: task
+        ? `/api/line-analysis/task/${task.uuid}`
+        : null,
+    }
+  } catch (error) {
+    console.error('Failed to get line analysis:', error)
+    return {
+      status: 'warning',
+      qualityAnalysisPolicy: null,
+    }
+  }
 }
 
 export const setupLineRoutes = (server: restify.Server) => {
@@ -32,24 +45,36 @@ export const setupLineRoutes = (server: restify.Server) => {
       const lines = await Line.findAll()
       const enrichedLines = await Promise.all(
         lines.map(async (line) => {
-          const [throughput, latency, packetLoss, jitter, status, policy] =
-            await Promise.all([
-              getMetricsFromPrometheus(line.uuid, 'throughput'),
-              getMetricsFromPrometheus(line.uuid, 'latency'),
-              getMetricsFromPrometheus(line.uuid, 'packet_loss'),
-              getMetricsFromPrometheus(line.uuid, 'jitter'),
-              getLineStatus(line.uuid),
-              getQualityAnalysisPolicy(line.uuid),
-            ])
+          let metrics = null
+          let analysis = null
+
+          try {
+            metrics = await getMetrics(line.uuid)
+          } catch (error) {
+            console.error('Failed to get metrics:', error)
+            metrics = {
+              throughputMonitoring: [],
+              latencyMonitoring: [],
+              packetLossMonitoring: [],
+              jitterMonitoring: [],
+            }
+          }
+
+          try {
+            analysis = await getLineAnalysis(line.uuid)
+          } catch (error) {
+            console.error('Failed to get analysis:', error)
+            analysis = {
+              status: 'warning',
+              qualityAnalysisPolicy: null,
+            }
+          }
 
           return {
             ...line.toJSON(),
-            throughputMonitoring: throughput,
-            latencyMonitoring: latency,
-            packetLossMonitoring: packetLoss,
-            jitterMonitoring: jitter,
-            status,
-            qualityAnalysisPolicy: policy,
+            ...metrics,
+            status: analysis.status,
+            qualityAnalysisPolicy: analysis.qualityAnalysisPolicy,
           }
         })
       )
@@ -68,13 +93,9 @@ export const setupLineRoutes = (server: restify.Server) => {
       try {
         const idOrUuid = req.params.idOrUuid
         let where: any = {
-          id: idOrUuid,
+          uuid: idOrUuid,
         }
-        if (isNaN(Number(idOrUuid))) {
-          where = {
-            uuid: idOrUuid,
-          }
-        }
+
         const line = await Line.findOne({ where })
 
         if (!line) {
@@ -82,24 +103,36 @@ export const setupLineRoutes = (server: restify.Server) => {
           return
         }
 
-        const [throughput, latency, packetLoss, jitter, status, policy] =
-          await Promise.all([
-            getMetricsFromPrometheus(line.uuid, 'throughput'),
-            getMetricsFromPrometheus(line.uuid, 'latency'),
-            getMetricsFromPrometheus(line.uuid, 'packet_loss'),
-            getMetricsFromPrometheus(line.uuid, 'jitter'),
-            getLineStatus(line.uuid),
-            getQualityAnalysisPolicy(line.uuid),
-          ])
+        let metrics = null
+        let analysis = null
+
+        try {
+          metrics = await getMetrics(line.uuid)
+        } catch (error) {
+          console.error('Failed to get metrics:', error)
+          metrics = {
+            throughputMonitoring: [],
+            latencyMonitoring: [],
+            packetLossMonitoring: [],
+            jitterMonitoring: [],
+          }
+        }
+
+        try {
+          analysis = await getLineAnalysis(line.uuid)
+        } catch (error) {
+          console.error('Failed to get analysis:', error)
+          analysis = {
+            status: 'warning',
+            qualityAnalysisPolicy: null,
+          }
+        }
 
         res.send({
           ...line.toJSON(),
-          throughputMonitoring: throughput,
-          latencyMonitoring: latency,
-          packetLossMonitoring: packetLoss,
-          jitterMonitoring: jitter,
-          status,
-          qualityAnalysisPolicy: policy,
+          ...metrics,
+          status: analysis.status,
+          qualityAnalysisPolicy: analysis.qualityAnalysisPolicy,
         })
       } catch (err) {
         res.send(500, { error: 'Internal server error' })

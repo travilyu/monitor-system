@@ -8,6 +8,8 @@
       :loading="loading"
       :pagination="pagination"
       @change="handleTableChange"
+      :scroll="scroll"
+      class="compact-table"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'operation'">
@@ -27,6 +29,7 @@ import { computed } from 'vue'
 import TableToolbar from './TableToolbar.vue'
 import TableOperations from './TableOperations.vue'
 import type { TableProps } from 'ant-design-vue'
+import type { Operation } from './TableOperations.vue'
 
 interface Props {
   columns: any[]
@@ -34,11 +37,8 @@ interface Props {
   loading?: boolean
   pagination?: TableProps['pagination']
   toolbarProps?: any
-  operations?: Array<{
-    key: string
-    label: string
-    type?: 'link' | 'primary' | 'default' | 'danger'
-  }>
+  operations?: Operation[]
+  scroll?: { x?: number | string }
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -92,5 +92,25 @@ const handleToolbarAction = (action: string, ...args: any[]) => {
 .base-table {
   background: #fff;
   padding: 24px;
+}
+
+:deep(.compact-table) {
+  /* 调整表格行高 */
+  .ant-table-thead > tr > th {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  .ant-table-tbody > tr > td {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.65);
+  }
+
+  /* 调整表头背景色，使其更柔和 */
+  .ant-table-thead > tr > th {
+    background: #fafafa;
+  }
 }
 </style>

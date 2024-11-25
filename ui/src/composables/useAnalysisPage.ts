@@ -3,6 +3,7 @@ import { message, Tag } from 'ant-design-vue'
 import type { ColumnType } from 'ant-design-vue/es/table'
 import type { TablePaginationConfig } from 'ant-design-vue/es/table/interface'
 import { analysisApi } from '@/api/modules/analysis'
+import { lineMonitorApi } from '@/api/modules/lineMonitor'
 import type {
   AnalysisTableItem,
   AnalysisFormState,
@@ -24,12 +25,31 @@ export function useAnalysisPage() {
     },
   })
 
+  const lineMap = ref<Map<string, { name: string; description?: string }>>(
+    new Map()
+  )
+
+  const loadLineInfo = async () => {
+    try {
+      const options = await lineMonitorApi.getLineOptions()
+      options.forEach((option) => {
+        lineMap.value.set(option.value, {
+          name: option.label,
+          description: option.description,
+        })
+      })
+    } catch (error) {
+      console.error('加载线路信息失败:', error)
+    }
+  }
+
   const columns: ColumnType[] = [
     {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
       width: 180,
+      fixed: 'left',
     },
     {
       title: '测试类型',
@@ -68,16 +88,46 @@ export function useAnalysisPage() {
       width: 140,
     },
     {
+      title: '下一跳地址',
+      dataIndex: 'next_hop_address',
+      key: 'next_hop_address',
+      width: 140,
+      customRender: ({ text }: { text: string }) => text || '--',
+    },
+    {
+      title: '源地址',
+      dataIndex: 'source_ip',
+      key: 'source_ip',
+      width: 140,
+      customRender: ({ text }: { text: string }) => text || '--',
+    },
+    {
       title: '绑定线路',
-      dataIndex: 'line_id',
-      key: 'line_id',
+      dataIndex: 'line_uuid',
+      key: 'line_uuid',
       width: 120,
+      customRender: ({ text }: { text: string }) => {
+        if (!text) return '--'
+        const lineInfo = lineMap.value.get(text)
+        return lineInfo ? lineInfo.name : '--'
+      },
+    },
+
+    {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 180,
+      customRender: ({ text }: { text: string }) => {
+        return text ? new Date(text).toLocaleString() : '-'
+      },
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 100,
+      fixed: 'right',
       customRender: ({ text }: { text: 'active' | 'inactive' }) => {
         const status: Record<
           'active' | 'inactive',
@@ -88,15 +138,6 @@ export function useAnalysisPage() {
         }
         const statusInfo = status[text] || { text, status: 'default' }
         return h(Tag, { color: statusInfo.status }, () => statusInfo.text)
-      },
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 180,
-      customRender: ({ text }: { text: string }) => {
-        return text ? new Date(text).toLocaleString() : '-'
       },
     },
   ]
@@ -123,6 +164,10 @@ export function useAnalysisPage() {
   const loadTableData = async () => {
     state.loading = true
     try {
+      if (lineMap.value.size === 0) {
+        await loadLineInfo()
+      }
+
       const { items, total } = await analysisApi.getList({
         page: state.pagination.current,
         pageSize: state.pagination.pageSize,
@@ -196,5 +241,6 @@ export function useAnalysisPage() {
     handleTableOperation,
     handleToolbarAction,
     handleDrawerSubmit,
+    scroll: { x: 1500 },
   }
 }
