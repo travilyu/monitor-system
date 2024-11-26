@@ -25,6 +25,7 @@
         placeholder="请输入搜索内容"
         @input="debouncedSearch"
         style="width: 200px"
+        allowClear
       />
     </div>
   </div>

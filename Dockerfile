@@ -40,7 +40,7 @@ ENV NODE_ENV=production
 
 # 暴露端口
 EXPOSE 8080
-EXPOSE 3000
+# EXPOSE 3000
 
 # 启动应用
 CMD ["sh", "-c", "cd server && node dist/index.js & node ../server.js"]

@@ -19,6 +19,7 @@
           placeholder="请输入关键字搜索"
           style="width: 200px"
           @search="handleSearch"
+          allowClear
         />
       </div>
     </div>

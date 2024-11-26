@@ -15,6 +15,7 @@
       @change="handleTableChange"
       @operation="handleTableOperation"
       @toolbar-action="handleToolbarAction"
+      @search="handleSearch"
     />
 
     <EditSliceModal
@@ -41,6 +42,7 @@ const {
   handleTableOperation,
   handleToolbarAction,
   handleDrawerSubmit,
+  handleSearch,
 } = useSlicePage()
 
 // 初始化加载数据

@@ -1,4 +1,4 @@
-import { ref, reactive, h } from 'vue'
+import { ref, reactive, h, computed } from 'vue'
 import { message, Tag } from 'ant-design-vue'
 import type { ColumnType } from 'ant-design-vue/es/table'
 import type { TablePaginationConfig } from 'ant-design-vue/es/table/interface'
@@ -28,6 +28,18 @@ export function useAnalysisPage() {
   const lineMap = ref<Map<string, { name: string; description?: string }>>(
     new Map()
   )
+
+  const searchKeyword = ref('')
+  const allTableData = ref<AnalysisTableItem[]>([])
+
+  const tableData = computed(() => {
+    if (!searchKeyword.value) return allTableData.value
+
+    const keyword = searchKeyword.value.toLowerCase()
+    return allTableData.value.filter((item) =>
+      JSON.stringify(item).toLowerCase().includes(keyword)
+    )
+  })
 
   const loadLineInfo = async () => {
     try {
@@ -142,8 +154,6 @@ export function useAnalysisPage() {
     },
   ]
 
-  const tableData = ref<AnalysisTableItem[]>([])
-
   const tableOperations: {
     key: string
     label: string
@@ -172,8 +182,8 @@ export function useAnalysisPage() {
         page: state.pagination.current,
         pageSize: state.pagination.pageSize,
       })
-      tableData.value = items
-      state.pagination.total = total
+      allTableData.value = items
+      state.pagination.total = items.length
     } catch (error) {
       message.error('加载数据失败')
     } finally {
@@ -206,13 +216,15 @@ export function useAnalysisPage() {
     }
   }
 
-  const handleToolbarAction = (action: string) => {
+  const handleToolbarAction = (action: string, ...args: any) => {
     if (action === 'add') {
       state.drawer.title = '新建分析'
       state.drawer.initialValues = {}
       state.drawer.visible = true
     } else if (action === 'refresh') {
       loadTableData()
+    } else if (action === 'search') {
+      handleSearch(args[0])
     }
   }
 
@@ -231,6 +243,16 @@ export function useAnalysisPage() {
     }
   }
 
+  const handleSearch = (value: string) => {
+    searchKeyword.value = value
+    state.pagination.current = 1
+  }
+
+  const clearSearch = () => {
+    searchKeyword.value = ''
+    state.pagination.current = 1
+  }
+
   return {
     state,
     columns,
@@ -242,5 +264,8 @@ export function useAnalysisPage() {
     handleToolbarAction,
     handleDrawerSubmit,
     scroll: { x: 1500 },
+    searchKeyword,
+    handleSearch,
+    clearSearch,
   }
 }

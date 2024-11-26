@@ -8,39 +8,26 @@ async function getMetrics(lineId: string) {
   return prometheusService.getAllMetrics(lineId)
 }
 
-// 获取线路状态和策略
-async function getLineAnalysis(lineUuid: string) {
-  try {
-    // 获取该线路的分析任务
-    const task = await Analysis.findOne({
-      where: {
-        lineUuid,
-      },
-      order: [['updatedAt', 'DESC']], // 获取最新的任务
-    })
-
-    return {
-      status: task ? task.status : '',
-      qualityAnalysisPolicy: task ? task.name : null,
-    }
-  } catch (error) {
-    console.error('Failed to get line analysis:', error)
-    return {
-      status: 'warning',
-      qualityAnalysisPolicy: null,
-    }
-  }
-}
-
 export const setupLineRoutes = (server: restify.Server) => {
   // 获取所有线路
   server.get('/api/line-monitor/lines', authMiddleware, async (req, res) => {
     try {
-      const lines = await Line.findAll()
+      const lines = await Line.findAll({
+        include: [
+          {
+            model: Analysis,
+            attributes: ['name'],
+            where: { status: 'active' },
+            required: false,
+            order: [['updatedAt', 'DESC']],
+            limit: 1,
+          },
+        ],
+      })
+
       const enrichedLines = await Promise.all(
         lines.map(async (line) => {
           let metrics = null
-          let analysis = null
 
           try {
             metrics = await getMetrics(line.uuid)
@@ -54,21 +41,10 @@ export const setupLineRoutes = (server: restify.Server) => {
             }
           }
 
-          try {
-            analysis = await getLineAnalysis(line.uuid)
-          } catch (error) {
-            console.error('Failed to get analysis:', error)
-            analysis = {
-              status: 'warning',
-              qualityAnalysisPolicy: null,
-            }
-          }
-
           return {
             ...line.toJSON(),
             ...metrics,
-            status: analysis.status,
-            qualityAnalysisPolicy: analysis.qualityAnalysisPolicy,
+            qualityAnalysisPolicy: line.Analysis?.name || null,
           }
         })
       )
@@ -86,11 +62,19 @@ export const setupLineRoutes = (server: restify.Server) => {
     async (req, res) => {
       try {
         const idOrUuid = req.params.idOrUuid
-        let where: any = {
-          uuid: idOrUuid,
-        }
-
-        const line = await Line.findOne({ where })
+        const line = await Line.findOne({
+          where: { uuid: idOrUuid },
+          include: [
+            {
+              model: Analysis,
+              attributes: ['name'],
+              where: { status: 'active' },
+              required: false,
+              order: [['updatedAt', 'DESC']],
+              limit: 1,
+            },
+          ],
+        })
 
         if (!line) {
           res.send(404, { error: 'Line not found' })
@@ -98,8 +82,6 @@ export const setupLineRoutes = (server: restify.Server) => {
         }
 
         let metrics = null
-        let analysis = null
-
         try {
           metrics = await getMetrics(line.uuid)
         } catch (error) {
@@ -112,21 +94,10 @@ export const setupLineRoutes = (server: restify.Server) => {
           }
         }
 
-        try {
-          analysis = await getLineAnalysis(line.uuid)
-        } catch (error) {
-          console.error('Failed to get analysis:', error)
-          analysis = {
-            status: 'warning',
-            qualityAnalysisPolicy: null,
-          }
-        }
-
         res.send({
           ...line.toJSON(),
           ...metrics,
-          status: analysis.status,
-          qualityAnalysisPolicy: analysis.qualityAnalysisPolicy,
+          qualityAnalysisPolicy: line.Analysis?.name || null,
         })
       } catch (err) {
         res.send(500, { error: 'Internal server error' })

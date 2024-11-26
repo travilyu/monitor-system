@@ -1,184 +1,95 @@
-import { ref, reactive, computed } from 'vue'
+import { ref, computed } from 'vue'
+import type { LineData } from '@/types/lineMonitor'
+import { lineMonitorApi } from '@/api/modules/lineMonitor'
 import { message } from 'ant-design-vue'
-import { monitorApi } from '@/api/modules/monitor'
-import type { MonitorItem } from '@/types/monitor'
 
-// 表格列定义
-const columns = [
-  {
-    title: '名称',
-    dataIndex: 'name',
-    key: 'name',
-    searchable: true,
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    searchable: true,
-  },
-  {
-    title: '操作',
-    key: 'action',
-    fixed: 'right',
-    width: 120,
-  },
-] as const
+export function useMonitorPage() {
+  const lines = ref<LineData[]>([])
+  const loading = ref(false)
+  const editModalVisible = ref(false)
+  const currentLine = ref<LineData | null>(null)
+  const searchKeyword = ref('')
 
-// 从列定义中获取可搜索字段
-const searchableFields = columns
-  .filter((col) => col.searchable)
-  .map((col) => col.dataIndex)
+  const filteredLines = computed(() => {
+    if (!searchKeyword.value) return lines.value
 
-// 默认搜索匹配函数
-const defaultSearchMatcher = (item: MonitorItem, keyword: string): boolean => {
-  if (!keyword) return true
-  const searchText = keyword.toLowerCase()
-
-  return searchableFields.some((field) => {
-    const value = item[field as keyof MonitorItem]
-    return value && String(value).toLowerCase().includes(searchText)
-  })
-}
-
-export function useLineAnalysisPage(searchMatcher = defaultSearchMatcher) {
-  const formRef = ref()
-  const state = reactive({
-    loading: false,
-    rawTableData: [] as MonitorItem[],
-    pagination: {
-      current: 1,
-      pageSize: 10,
-      total: 0,
-    },
-    search: {
-      keyword: '',
-    },
-    drawer: {
-      visible: false,
-      title: '',
-      initialValues: {} as Partial<MonitorItem>,
-    },
-  })
-
-  // 计算过滤后的表格数据
-  const tableData = computed(() => {
-    const filteredData = state.rawTableData.filter((item) =>
-      searchMatcher(item, state.search.keyword)
+    const keyword = searchKeyword.value.toLowerCase()
+    return lines.value.filter(
+      (line) =>
+        line.name.toLowerCase().includes(keyword) ||
+        line.description?.toLowerCase().includes(keyword) ||
+        line.vlan?.toString().includes(keyword)
     )
-
-    state.pagination.total = filteredData.length
-    const start = (state.pagination.current - 1) * state.pagination.pageSize
-    const end = start + state.pagination.pageSize
-    return filteredData.slice(start, end)
   })
 
-  // 表格操作定义
-  const tableOperations = [
-    {
-      key: 'edit',
-      label: '编辑',
-      type: 'link',
-    },
-    {
-      key: 'delete',
-      label: '删除',
-      type: 'link',
-      danger: true,
-    },
-  ]
-
-  // 加载表格数据
-  const loadTableData = async () => {
-    state.loading = true
+  const fetchLines = async () => {
+    loading.value = true
     try {
-      const { items, total } = await monitorApi.getList({
-        page: 1,
-        pageSize: 1000, // 获取所有数据进行前端分页
-      })
-      state.rawTableData = items
+      const response = await lineMonitorApi.getLines()
+      lines.value = response.data
     } catch (error) {
-      message.error('加载数据失败')
+      console.error('获取线路数据失败:', error)
     } finally {
-      state.loading = false
+      loading.value = false
     }
   }
 
-  // 处理表格变化
-  const handleTableChange = (pagination: any) => {
-    state.pagination.current = pagination.current
-    state.pagination.pageSize = pagination.pageSize
+  const handleEdit = (line: LineData) => {
+    currentLine.value = line
+    editModalVisible.value = true
   }
 
-  // 处理表格操作
-  const handleTableOperation = async (key: string, record: MonitorItem) => {
-    switch (key) {
-      case 'edit':
-        state.drawer.title = '编辑监控项'
-        state.drawer.initialValues = { ...record }
-        state.drawer.open = true
-        break
-      case 'delete':
-        try {
-          if (record.id) {
-            await monitorApi.delete(record.id)
-            message.success('删除成功')
-            loadTableData()
-          }
-        } catch (error) {
-          message.error('删除失败')
-        }
-        break
-    }
-  }
-
-  // 处理工具栏操作
-  const handleToolbarAction = (action: string, ...args: any[]) => {
-    switch (action) {
-      case 'add':
-        state.drawer.title = '新增监控项'
-        state.drawer.initialValues = {}
-        state.drawer.open = true
-        break
-      case 'refresh':
-        state.search.keyword = ''
-        state.pagination.current = 1
-        loadTableData()
-        break
-      case 'search':
-        state.search.keyword = args[0]
-        state.pagination.current = 1
-        break
-    }
-  }
-
-  // 处理抽屉提交
-  const handleDrawerSubmit = async (values: MonitorItem) => {
+  const handleDelete = async (id: string) => {
     try {
-      if (values.id) {
-        await monitorApi.update(values.id, values)
-        message.success('更新成功')
-      } else {
-        await monitorApi.create(values)
-        message.success('创建成功')
-      }
-      state.drawer.open = false
-      loadTableData()
+      loading.value = true
+      await lineMonitorApi.deleteLine(id)
+      await fetchLines()
+      message.success('删除线路成功')
     } catch (error) {
-      message.error('操作失败')
+      console.error('删除线路失败:', error)
+      message.error('删除线路失败')
+    } finally {
+      loading.value = false
     }
+  }
+
+  const handleEditSuccess = async () => {
+    editModalVisible.value = false
+    currentLine.value = null
+    await fetchLines()
+  }
+
+  const handleAdd = () => {
+    currentLine.value = null
+    editModalVisible.value = true
+  }
+
+  const handleRefresh = () => {
+    fetchLines()
+  }
+
+  const handleSearch = (value: string) => {
+    searchKeyword.value = value
+  }
+
+  const clearSearch = () => {
+    searchKeyword.value = ''
   }
 
   return {
-    formRef,
-    state,
-    columns, // 导出列定义
-    tableData,
-    tableOperations,
-    loadTableData,
-    handleTableChange,
-    handleTableOperation,
-    handleToolbarAction,
-    handleDrawerSubmit,
+    lines,
+    loading,
+    editModalVisible,
+    currentLine,
+    searchKeyword,
+    filteredLines,
+    fetchLines,
+    handleEdit,
+    handleDelete,
+    handleEditSuccess,
+    handleAdd,
+    handleRefresh,
+    handleSearch,
+    clearSearch,
   }
 }

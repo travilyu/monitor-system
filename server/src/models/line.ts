@@ -5,11 +5,13 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  HasMany,
 } from 'sequelize'
+import { Analysis } from './analysis'
 
 export class Line extends Model<
-  InferAttributes<Line>,
-  InferCreationAttributes<Line>
+  InferAttributes<Line, { omit: 'Analysis' }>,
+  InferCreationAttributes<Line, { omit: 'Analysis' }>
 > {
   declare id: CreationOptional<number>
   declare uuid: string
@@ -17,9 +19,18 @@ export class Line extends Model<
   declare description: string
   declare vlan: number
   declare bandwidth: number
+  declare status: CreationOptional<'success' | 'warning' | 'error' | null>
+
+  // 声明关联
+  declare Analysis?: Analysis
 
   declare createdAt: CreationOptional<Date>
   declare updatedAt: CreationOptional<Date>
+
+  // 声明关联方法
+  declare static associations: {
+    Analysis: HasMany<Line, Analysis>
+  }
 }
 
 export function initLineModel(sequelize: Sequelize) {
@@ -51,6 +62,11 @@ export function initLineModel(sequelize: Sequelize) {
       bandwidth: {
         type: DataTypes.BIGINT,
         allowNull: false,
+      },
+      status: {
+        type: DataTypes.ENUM('success', 'warning', 'error'),
+        allowNull: true,
+        defaultValue: null,
       },
       createdAt: {
         type: DataTypes.DATE,
