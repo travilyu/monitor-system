@@ -13,7 +13,18 @@ export const setupLineRoutes = (server: restify.Server) => {
   server.get('/api/line-monitor/lines', authMiddleware, async (req, res) => {
     try {
       const lines = await Line.findAll({
-
+        include: [
+          {
+            model: Analysis,
+            as: 'Analysis',
+            attributes: ['name'],
+            required: false,
+            // where: { status: 'active' },
+            order: [['updatedAt', 'DESC']],
+            limit: 1,
+          },
+        ],
+        logging: console.log,
       })
 
       const enrichedLines = await Promise.all(
@@ -59,13 +70,15 @@ export const setupLineRoutes = (server: restify.Server) => {
           include: [
             {
               model: Analysis,
+              as: 'Analysis',
               attributes: ['name'],
-              where: { status: 'active' },
+              // where: { status: 'active' },
               required: false,
               order: [['updatedAt', 'DESC']],
               limit: 1,
             },
           ],
+          logging: console.log,
         })
 
         if (!line) {

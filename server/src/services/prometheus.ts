@@ -222,7 +222,7 @@ export class PrometheusService {
       status: 'success' as const, // 模拟数据默认返回 success
     }
 
-    console.log('Mock data:', JSON.stringify(mockData, null, 2))
+    console.log('Mock data')
     return mockData
   }
 }
