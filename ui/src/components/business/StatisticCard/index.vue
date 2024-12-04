@@ -11,7 +11,7 @@
           :color="status === 'success' ? 'success' : 'error'"
           v-if="status"
         >
-          {{ status === 'success' ? '正常' : '异常' }}
+          {{ getStatusText(status) }}
         </a-tag>
       </div>
     </template>
@@ -41,6 +41,7 @@
           :unit="chart.unit"
           :color="chart.color"
           :loading="loading"
+          :format="chart.format"
         />
       </div>
     </div>
@@ -56,6 +57,7 @@ export interface ChartConfig {
   title: string
   data: TimeSeriesData[]
   unit?: string
+  format?: (value: number) => string
   // 颜色可以是固定的字符串,也可以是一个根据数值返回颜色的函数
   color?: string | ((value: number) => string)
 }
@@ -75,6 +77,15 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
   charts: () => [],
 })
+
+function getStatusText(status: string) {
+  const statusMap: Record<string, string> = {
+    success: '在线',
+    warning: '离线',
+    error: '异常',
+  }
+  return statusMap[status] || status
+}
 </script>
 
 <style scoped>

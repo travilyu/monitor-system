@@ -6,6 +6,7 @@ import {
   InferCreationAttributes,
   CreationOptional,
   HasMany,
+  QueryTypes,
 } from 'sequelize'
 import { Analysis } from './analysis'
 
@@ -19,7 +20,6 @@ export class Line extends Model<
   declare description: string
   declare vlan: number
   declare bandwidth: number
-  declare status: CreationOptional<'success' | 'warning' | 'error' | null>
 
   // 声明关联
   declare Analysis?: Analysis
@@ -30,6 +30,30 @@ export class Line extends Model<
   // 声明关联方法
   declare static associations: {
     Analysis: HasMany<Line, Analysis>
+  }
+}
+
+export async function checkAndRemoveStatusField(sequelize: Sequelize) {
+  try {
+    // 检查 status 字段是否存在
+    const [results] = await sequelize.query(
+      `SELECT COLUMN_NAME
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_NAME = 'lines'
+       AND COLUMN_NAME = 'status'`,
+      { type: QueryTypes.SELECT }
+    )
+
+    if (results) {
+      console.log('Found deprecated status field, removing...')
+      // 删除 status 字段
+      await sequelize.query('ALTER TABLE `lines` DROP COLUMN status')
+      console.log('Status field removed successfully')
+    } else {
+      console.log('Status field not found, no action needed')
+    }
+  } catch (error) {
+    console.error('Error checking/removing status field:', error)
   }
 }
 
@@ -62,11 +86,6 @@ export function initLineModel(sequelize: Sequelize) {
       bandwidth: {
         type: DataTypes.BIGINT,
         allowNull: false,
-      },
-      status: {
-        type: DataTypes.ENUM('success', 'warning', 'error'),
-        allowNull: true,
-        defaultValue: null,
       },
       createdAt: {
         type: DataTypes.DATE,

@@ -1,9 +1,9 @@
 import { Sequelize } from 'sequelize'
-import { initUserModel } from './user'
-import { initLineModel } from './line'
+import config from '../config'
+import { initLineModel, checkAndRemoveStatusField } from './line'
 import { initAnalysisModel } from './analysis'
 import { initSliceModel } from './slice'
-import config from '../config'
+import { initUserModel } from './user'
 
 const sequelize = new Sequelize(config.database)
 
@@ -17,10 +17,23 @@ export const Slice = initSliceModel(sequelize)
 Line.hasMany(Analysis, {
   foreignKey: 'lineUuid',
   sourceKey: 'uuid',
+  as: 'Analysis',
 })
+
 Analysis.belongsTo(Line, {
   foreignKey: 'lineUuid',
   targetKey: 'uuid',
 })
+
+// 数据库迁移
+export async function runMigrations() {
+  try {
+    console.log('Running database migrations...')
+    await checkAndRemoveStatusField(sequelize)
+    console.log('Database migrations completed')
+  } catch (error) {
+    console.error('Error running migrations:', error)
+  }
+}
 
 export { sequelize }

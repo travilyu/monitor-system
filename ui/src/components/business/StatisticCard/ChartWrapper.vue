@@ -17,12 +17,14 @@ interface Props {
   loading?: boolean
   color?: string
   unit?: string
+  format?: (value: number) => string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   color: '#1890ff',
   unit: '',
+  format: ((value: number) => value.toFixed(2)),
 })
 
 const chartRef = ref<HTMLElement>()
@@ -61,7 +63,8 @@ const initChart = () => {
         if (!items?.length) return ''
         const index = Number(items[0].title)
         const dataItem = props.data[index]
-        const value = dataItem.value.toFixed(2)
+        const format = props.format || ((value: number) => value.toFixed(2))
+        const value = format(dataItem.value)
         const time = new Date(dataItem.timestamp).toLocaleString()
         return `
           <div>

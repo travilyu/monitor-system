@@ -14,3 +14,7 @@ metrics:
   jitter:
     query: 'stddev_over_time(ping_latency_ms{line_id="{{lineId}}"}[5m])'
     description: '抖动 (ms)'
+
+  status:
+    query: 'line_status{line_id="{{lineId}}"}'
+    description: '线路状态 (1: online, 2: offline, 3: error)'

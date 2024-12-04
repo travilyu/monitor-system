@@ -1,14 +1,13 @@
 import * as restify from 'restify'
-import * as dotenv from 'dotenv'
-import { initDatabase } from './db'
+import { sequelize, runMigrations } from './models'
 import { setupAuthRoutes } from './auth'
 import { setupLineRoutes } from './lines'
 import { setupAnalysisRoutes } from './analysis'
-import { setupSliceRoutes } from './slice'
+import config from './config'
 
-dotenv.config()
-
-const server = restify.createServer()
+const server = restify.createServer({
+  name: 'monitor-system',
+})
 
 // 中间件
 server.use(restify.plugins.bodyParser())
@@ -35,12 +34,16 @@ server.opts('/*', (req, res, next) => {
 setupAuthRoutes(server)
 setupLineRoutes(server)
 setupAnalysisRoutes(server)
-setupSliceRoutes(server)
 
 // 初始化数据库并启动服务器
 async function start() {
   try {
-    await initDatabase()
+    // 运行数据库迁移
+    await runMigrations()
+
+    // 同步数据库
+    await sequelize.sync()
+    console.log('Database synced')
 
     const port = process.env.PORT || 3000
     server.listen(port, () => {

@@ -4,7 +4,7 @@ import { authMiddleware } from './auth'
 import { prometheusService } from './services/prometheus'
 
 // 从 Prometheus 获取监控数据
-async function getMetrics(lineId: string) {
+async function getMetrics(lineId: number) {
   return prometheusService.getAllMetrics(lineId)
 }
 
@@ -13,16 +13,7 @@ export const setupLineRoutes = (server: restify.Server) => {
   server.get('/api/line-monitor/lines', authMiddleware, async (req, res) => {
     try {
       const lines = await Line.findAll({
-        include: [
-          {
-            model: Analysis,
-            attributes: ['name'],
-            where: { status: 'active' },
-            required: false,
-            order: [['updatedAt', 'DESC']],
-            limit: 1,
-          },
-        ],
+
       })
 
       const enrichedLines = await Promise.all(
@@ -30,7 +21,7 @@ export const setupLineRoutes = (server: restify.Server) => {
           let metrics = null
 
           try {
-            metrics = await getMetrics(line.uuid)
+            metrics = await getMetrics(line.id)
           } catch (error) {
             console.error('Failed to get metrics:', error)
             metrics = {
@@ -51,6 +42,7 @@ export const setupLineRoutes = (server: restify.Server) => {
 
       res.send({ data: enrichedLines })
     } catch (err) {
+      console.error(err)
       res.send(500, { error: 'Internal server error' })
     }
   })
@@ -83,7 +75,7 @@ export const setupLineRoutes = (server: restify.Server) => {
 
         let metrics = null
         try {
-          metrics = await getMetrics(line.uuid)
+          metrics = await getMetrics(line.id)
         } catch (error) {
           console.error('Failed to get metrics:', error)
           metrics = {

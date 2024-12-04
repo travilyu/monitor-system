@@ -17,6 +17,7 @@
         :loading="loading"
         :color="computedColor"
         :unit="unit"
+        :format="format"
       />
     </div>
   </div>
@@ -32,16 +33,18 @@ interface Props {
   unit?: string
   loading?: boolean
   color?: string | ((value: number) => string)
+  format?: ((value: number) => string)
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   color: '#1890ff', // 默认蓝色
+  format: ((value: number) => value.toFixed(2)),
 })
 
 const latestValue = computed(() => {
   if (!props.data || props.data.length === 0) return null
-  return props.data[props.data.length - 1].value.toFixed(2)
+  return props.format(props.data[props.data.length - 1].value)
 })
 
 const computedColor = computed(() => {

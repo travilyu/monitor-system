@@ -1,5 +1,16 @@
-// API 基础配置
-export const API_BASE_URL = 'http://localhost:3000/'
+// 判断是否是开发环境
+const isDev = process.env.NODE_ENV === 'development'
+
+// 根据环境导出不同的基础URL
+export const API_BASE_URL = isDev
+  ? 'http://localhost:3000/'
+  : `${window.location.protocol}//${window.location.host}/`
+
+// 如果需要更多环境相关的配置
+export const API_CONFIG = {
+  timeout: 10000, // API 超时时间
+  withCredentials: true, // 跨域请求是否需要凭证
+}
 
 // API 路由配置
 export const API_ROUTES = {

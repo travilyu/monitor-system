@@ -142,7 +142,14 @@ const getLineCharts = (line: LineData): ChartConfig[] => {
     {
       title: '吞吐量',
       data: line.throughputMonitoring || [],
-      unit: 'Mbps',
+      unit: 'bps',
+      // 将 流量值 转换为 合适的KMG缩进
+      format: (value: number) => {
+        if (value >= 1000000000) return `${(value / 1000000000).toFixed(2)}G`
+        if (value >= 1000000) return `${(value / 1000000).toFixed(2)}M`
+        if (value >= 1000) return `${(value / 1000).toFixed(2)}K`
+        return `${value.toFixed(2)}`
+      },
       color: '#1890ff', // 吞吐量保持固定颜色
     },
     {
